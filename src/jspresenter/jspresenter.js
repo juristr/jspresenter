@@ -1,13 +1,19 @@
 steal(
+	'./resources/bootstrap/css/bootstrap.css',
 	'./jspresenter.css',
+	'./presentationmode.css',
 	'jquery/controller/route'
 	)
 .then(
 	'jquery/controller',
 	'jquery/controller/view',
-	'jquery/view/ejs',
+	'jquery/view/ejs')
+.then(
 	'./resources/markdown/Markdown.Converter.js',
-	'./resources/prettify.js'
+	'./resources/prettify.js',
+	'./resources/mousetrap.js',
+	//'./resources/prompter.js',
+	'./resources/keymaster.min.js'
 	)
 .then(function(){
 	
@@ -57,7 +63,7 @@ steal(
 
 		//privates
 		_renderMarkdown: function(markdownViewContent){
-			return "<section class='span8 pages-content'>" + this._mdConverter.makeHtml(markdownViewContent); + "</section>";
+			return this._mdConverter.makeHtml(markdownViewContent);
 		},
 
         _addPrettify: function () {
@@ -74,7 +80,7 @@ steal(
 
 	});
 
-	$.Controller('Juristr.Routing', {
+	$.Controller('Routing', {
 
 		init: function(){
 			// article about routing:
@@ -89,6 +95,8 @@ steal(
 					}
 				}
 			});
+
+			//this.scroller = new Scroller($("#js-content"));
 		},
 
 		'route' : function(){
@@ -105,8 +113,81 @@ steal(
 
 			//controller[data.pagename]();
 			controller.renderUnit(data.pagename);
+
+			//this.scroller.initialize();
 		}
 	});
 
-	new Juristr.Routing(document.body);
+	$.Controller('Scroller', {
+
+		init: function(){
+			
+			Mousetrap.bind("down", this.proxy(this.nextSlide));
+			Mousetrap.bind("up", this.proxy(this.previousSlide));
+
+		},
+
+		initialize: function(){
+			this.element.children("*").hide();
+			//$(".pages-content > *").hide(); //generalize
+		},
+
+		previousSlide: function(){
+			console.log("previous slide");
+			var elem = this.element.find("*:visible:not('br'):last").hide();
+		},
+
+		nextSlide: function(){
+			console.log("next slide");
+			this._showNext();
+		},
+
+		_showNext: function(){
+			var elem = this.element.find("*:hidden:not('br'):first").show();
+		    // if (! firstShown) {
+		    //   firstShown = elem;
+		    // }
+		    
+		    // showingElement = elem;
+
+		    // var height = elem.outerHeight(true);
+
+		    // function callback() {
+		    //   if (cb) { cb(scrollingOne ? 0 : 1); }
+		    // }
+
+		    // adjustPos(height, function() {
+		    //   var dur = duration();
+		    //   if (! dur) {
+		    //     elem.show();
+		    //     callback();
+		    //   } else {
+		    //     elem.fadeIn(dur, callback); 
+		    //   }
+		    // });
+		},
+
+		_adjustPos: function (elemHeight, cb) {
+		    var windowHeight = $(window).height();
+		    var visibleHeight = $('#body').height() + elemHeight;
+		    var top = windowHeight - visibleHeight;
+
+		    // adjust if element is bigger that window
+		    if (windowHeight < elemHeight) {
+		      leftToScroll = elemHeight - windowHeight;
+		      top += leftToScroll;
+		      scrollingOne = true;
+		    }
+		    var dur = duration();
+		    if (dur === 0) {
+		      container.css('top', top);
+		      if (cb) cb();
+		    } else {
+		      container.animate({top: top}, dur, 'swing', cb)
+		    }
+  		}
+
+	});
+
+	new Routing(document.body);
 });
